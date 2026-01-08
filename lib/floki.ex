@@ -541,14 +541,9 @@ defmodule Floki do
 
     opts = Keyword.validate!(opts, defaults)
 
-    cleaned_html_tree =
-      html
-      |> clean_html_tree(:js, opts[:js])
-      |> clean_html_tree(:style, opts[:style])
-
     search_strategy = if opts[:deep], do: Floki.DeepText, else: Floki.FlatText
 
-    search_strategy.get(cleaned_html_tree, opts[:sep], opts[:include_inputs])
+    search_strategy.get(html, opts[:sep], opts[:include_inputs], opts[:js], opts[:style])
   end
 
   @doc """
@@ -674,12 +669,6 @@ defmodule Floki do
       end
     )
   end
-
-  defp clean_html_tree(html_tree, :js, true), do: html_tree
-  defp clean_html_tree(html_tree, :js, _), do: filter_out(html_tree, "script")
-
-  defp clean_html_tree(html_tree, :style, true), do: html_tree
-  defp clean_html_tree(html_tree, :style, _), do: filter_out(html_tree, "style")
 
   @doc """
   Returns the nodes from a HTML tree that don't match the filter selector.
