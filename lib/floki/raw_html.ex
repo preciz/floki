@@ -21,14 +21,15 @@ defmodule Floki.RawHTML do
     "wbr"
   ]
 
+  @default_self_closing_tags_set MapSet.new(@default_self_closing_tags)
+
   def default_self_closing_tags(), do: @default_self_closing_tags
 
   def self_closing_tags do
-    custom_self_closing_tags = Application.get_env(:floki, :self_closing_tags)
-
-    if is_list(custom_self_closing_tags),
-      do: custom_self_closing_tags,
-      else: @default_self_closing_tags
+    case Application.get_env(:floki, :self_closing_tags) do
+      tags when is_list(tags) -> MapSet.new(tags)
+      _ -> @default_self_closing_tags_set
+    end
   end
 
   @encoder &Floki.Entities.encode/1
@@ -189,7 +190,7 @@ defmodule Floki.RawHTML do
     ]
 
   defp close_open_tag(type, [], self_closing_tags) do
-    if type in self_closing_tags do
+    if MapSet.member?(self_closing_tags, type) do
       "/>"
     else
       ">"
@@ -199,7 +200,7 @@ defmodule Floki.RawHTML do
   defp close_open_tag(_type, _children, _self_closing_tags), do: ">"
 
   defp close_end_tag(type, [], pad, self_closing_tags, line_ending) do
-    if type in self_closing_tags do
+    if MapSet.member?(self_closing_tags, type) do
       []
     else
       [pad, "</", type, ">", line_ending]
